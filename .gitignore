@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# PyInstaller
+build/
+dist/
+*.spec
+
+# Virtual Environment
+.venv/
+venv/
+env/
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
+
+# Temporary audio
+*.wav
+
+# Windows
+Thumbs.db
+Desktop.ini
