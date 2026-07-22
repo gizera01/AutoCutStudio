@@ -2,53 +2,63 @@
 
 ### Automatic Video Editing Starts Here
 
-AutoCut Studio is an open-source desktop application designed to automate video editing.
+AutoCut Studio is an open-source desktop application built to simplify and automate video editing.
 
-The first version automatically detects and removes silent sections from videos, allowing creators to save time and speed up their editing workflow.
+The software automatically detects and removes silent sections from videos, allowing content creators to save time and focus on producing content instead of manually editing pauses.
 
-This project is under active development and many new intelligent editing features are planned for future releases.
+AutoCut Studio is under active development, with many new features planned to transform it into a complete automatic video editing solution.
 
 ---
 
 # Features
 
-## Version 1.0
-
 - Automatic silence detection
 - Automatic silence removal
 - Automatic video rendering
-- Modern desktop interface
 - Offline processing
-- Fast video analysis
+- Fast audio analysis
+- Modern desktop interface
+- Easy to use
 
 ---
 
-# Roadmap
+# 🚀 Upcoming Features
 
-## Version 1.5
+## Audio
+
 - Automatic breathing removal
-
-## Version 2.0
 - Background noise removal
+- Voice enhancement
+- Custom silence sensitivity
+- Automatic filler word detection
 
-## Version 2.5
-- Filler word detection
-- Automatic pause optimization
+## Video
 
-## Version 3.0
-- AI-powered video editing
 - Smart scene detection
-- Subtitle generation
+- Automatic highlight generation
+- Batch video processing
+- Auto zoom
+- Face tracking
 
-## Future Features
+## Artificial Intelligence
+
+- AI-powered automatic video editing
+- Intelligent cut suggestions
+- Smart content analysis
+- Automatic subtitle generation
+
+## Performance
 
 - GPU acceleration
-- Auto Zoom
-- Highlight detection
-- Multi-language support
-- Face tracking
-- Social media clip generation
-- Automatic caption generation
+- Faster rendering
+- Multi-thread processing
+
+## Platform
+
+- Windows
+- macOS
+- Linux
+- Multi-language interface
 
 ---
 
@@ -70,7 +80,7 @@ Clone the repository:
 git clone https://github.com/YOUR_USERNAME/AutoCutStudio.git
 ```
 
-Install dependencies:
+Install the required dependencies:
 
 ```bash
 pip install -r requirements.txt
@@ -82,27 +92,25 @@ Run the application:
 python app.py
 ```
 
-Or download the latest executable from the Releases section.
+Or download the latest executable from the **Releases** section.
 
 ---
 
 # Why AutoCut Studio?
 
-Professional video editing is repetitive and time-consuming.
+Video editing is often repetitive and time-consuming.
 
-AutoCut Studio was created to automate repetitive editing tasks, allowing creators to focus on producing content instead of manually cutting silent moments.
+AutoCut Studio was created to automate repetitive editing tasks, allowing creators to spend less time editing and more time creating.
+
+The long-term vision is to become a complete desktop solution for intelligent video editing.
 
 ---
 
 # Project Status
 
-Current Version
+**Status:** Actively Developed
 
-**Version 1.0**
-
-Status
-
-**Actively Developed**
+The project is continuously evolving and new features will be added over time.
 
 ---
 
