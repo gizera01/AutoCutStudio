@@ -55,14 +55,13 @@ AutoCut Studio is under active development, with many new features planned to tr
 - Faster rendering
 - Multi-thread processing
 
-## Platform
+# Platform Support
 
-- Windows
-
-## Planned Support
-
-- macOS
-- Linux
+| Platform | Status |
+|----------|--------|
+| 🟢 Windows | Supported |
+| 🟡 macOS | Planned |
+| 🟡 Linux | Planned |
 
 ---
 
