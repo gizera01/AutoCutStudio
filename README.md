@@ -77,6 +77,8 @@ AutoCut Studio is under active development, with many new features planned to tr
 
 # Installation
 
+Clique Releases para baixar o .EXE
+
 Clone the repository:
 
 ```bash
