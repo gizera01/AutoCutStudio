@@ -18,7 +18,7 @@ AutoCut Studio is under active development, with many new features planned to tr
 
 - Automatic silence detection
 - Automatic silence removal
-- Background noise removal
+- Automatic Silence Removal — Version 2.0 BETA
 - Automatic video rendering
 - Offline processing
 - Fast audio analysis
