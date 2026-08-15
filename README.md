@@ -3,6 +3,7 @@
 ### Automatic Video Editing Starts Here
 
 AutoCut Studio Version 1.0
+
 AutoCut Studio Version 2.0
 
 AutoCut Studio is an open-source desktop application built to simplify and automate video editing.
