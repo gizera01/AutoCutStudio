@@ -1,12 +1,20 @@
-import customtkinter as ctk
-from tkinter import filedialog
+import os
 import threading
+
+import customtkinter as ctk
+
+from tkinter import filedialog
 
 from audio.audio_processor import AudioProcessor
 from video.video_processor import VideoProcessor
 
 
+# ============================================
+# PROCESSORS
+# ============================================
+
 audio_processor = AudioProcessor()
+
 video_processor = VideoProcessor()
 
 
@@ -16,8 +24,18 @@ video_processor = VideoProcessor()
 
 app = ctk.CTk()
 
-app.title("AutoCut Studio")
-app.geometry("900x800")
+app.title(
+    "AutoCut Studio"
+)
+
+app.geometry(
+    "900x800"
+)
+
+app.resizable(
+    False,
+    False
+)
 
 
 # ============================================
@@ -46,8 +64,15 @@ def select_video():
 
     if path:
 
-        video_entry.delete(0, "end")
-        video_entry.insert(0, path)
+        video_entry.delete(
+            0,
+            "end"
+        )
+
+        video_entry.insert(
+            0,
+            path
+        )
 
 
 def select_output_folder():
@@ -56,15 +81,25 @@ def select_output_folder():
 
     if path:
 
-        output_entry.delete(0, "end")
-        output_entry.insert(0, path)
+        output_entry.delete(
+            0,
+            "end"
+        )
+
+        output_entry.insert(
+            0,
+            path
+        )
 
 
 # ============================================
 # STATUS
 # ============================================
 
-def update_status(text, progress=None):
+def update_status(
+    text,
+    progress=None
+):
 
     app.after(
 
@@ -73,7 +108,6 @@ def update_status(text, progress=None):
         lambda: status.configure(
             text=text
         )
-
     )
 
     if progress is not None:
@@ -82,36 +116,109 @@ def update_status(text, progress=None):
 
             0,
 
-            lambda: progress_bar.set(progress)
-
+            lambda: progress_bar.set(
+                progress
+            )
         )
 
 
 # ============================================
-# PROCESSING
+# ENABLE / DISABLE PROCESS BUTTON
+# ============================================
+
+def update_process_button():
+
+    silence_enabled = (
+        remove_silence.get() == 1
+    )
+
+    noise_enabled = (
+        remove_noise.get() == 1
+    )
+
+    if silence_enabled or noise_enabled:
+
+        process_button.configure(
+            state="normal"
+        )
+
+    else:
+
+        process_button.configure(
+            state="disabled"
+        )
+
+
+# ============================================
+# PROCESS THREAD
 # ============================================
 
 def start_thread():
 
-    thread = threading.Thread(
-        target=process_video
+    # ----------------------------------------
+    # CHECK OPTIONS
+    # ----------------------------------------
+
+    silence_enabled = (
+        remove_silence.get() == 1
     )
 
-    thread.daemon = True
+    noise_enabled = (
+        remove_noise.get() == 1
+    )
+
+    if not silence_enabled and not noise_enabled:
+
+        update_status(
+            "Please select at least one "
+            "processing option."
+        )
+
+        return
+
+    # ----------------------------------------
+    # START THREAD
+    # ----------------------------------------
+
+    thread = threading.Thread(
+        target=process_video,
+        daemon=True
+    )
+
     thread.start()
 
+
+# ============================================
+# PROCESS VIDEO
+# ============================================
 
 def process_video():
 
     try:
 
-        video_path = video_entry.get()
+        # ====================================
+        # GET VALUES
+        # ====================================
 
-        output_folder = output_entry.get()
+        video_path = (
+            video_entry.get().strip()
+        )
 
-        # ----------------------------------------
-        # Validate video
-        # ----------------------------------------
+        output_folder = (
+            output_entry.get().strip()
+        )
+
+        remove_silence_enabled = (
+            remove_silence.get() == 1
+        )
+
+        reduce_noise_enabled = (
+            remove_noise.get() == 1
+        )
+
+        # ====================================
+        # VALIDATE VIDEO
+        # ====================================
 
         if video_path == "":
 
@@ -121,9 +228,20 @@ def process_video():
 
             return
 
-        # ----------------------------------------
-        # Validate output folder
-        # ----------------------------------------
+        if not os.path.isfile(
+            video_path
+        ):
+
+            update_status(
+                "The selected video "
+                "does not exist."
+            )
+
+            return
+
+        # ====================================
+        # VALIDATE OUTPUT
+        # ====================================
 
         if output_folder == "":
 
@@ -133,42 +251,186 @@ def process_video():
 
             return
 
-        # ----------------------------------------
-        # Validate processing option
-        # ----------------------------------------
+        os.makedirs(
+            output_folder,
+            exist_ok=True
+        )
 
-        if remove_silence.get() == 0:
+        # ====================================
+        # VALIDATE OPTIONS
+        # ====================================
+
+        if (
+            not remove_silence_enabled
+            and
+            not reduce_noise_enabled
+        ):
 
             update_status(
-                "Please enable 'Remove Silence' before processing."
+                "Please select at least one "
+                "processing option."
             )
 
             return
 
-        update_status(
-            "Analyzing audio...",
-            0.20
+        # ====================================
+        # DISABLE BUTTON
+        # ====================================
+
+        app.after(
+
+            0,
+
+            lambda: process_button.configure(
+                state="disabled"
+            )
         )
 
-        clips = audio_processor.load_video(
-            video_path,
-            output_folder
+        # ====================================
+        # DETERMINE MODE
+        # ====================================
+
+        if (
+            remove_silence_enabled
+            and
+            reduce_noise_enabled
+        ):
+
+            update_status(
+                "Removing silence and "
+                "reducing background noise...",
+                0.05
+            )
+
+            output_name = (
+                "video_processed.mp4"
+            )
+
+        elif remove_silence_enabled:
+
+            update_status(
+                "Removing silence...",
+                0.05
+            )
+
+            output_name = (
+                "video_cut.mp4"
+            )
+
+        else:
+
+            update_status(
+                "Reducing background noise...",
+                0.05
+            )
+
+            output_name = (
+                "video_noise_reduced.mp4"
+            )
+
+        # ====================================
+        # AUDIO PROCESSING
+        # ====================================
+
+        clips = None
+
+        audio_result = (
+            audio_processor.load_video(
+
+                video_path,
+
+                output_folder,
+
+                reduce_noise=(
+                    reduce_noise_enabled
+                ),
+
+                detect_silence=(
+                    remove_silence_enabled
+                )
+            )
         )
 
+        # ====================================
+        # DETERMINE AUDIO PATH
+        # ====================================
+
+        audio_path = None
+
+        if reduce_noise_enabled:
+
+            audio_path = os.path.join(
+
+                output_folder,
+
+                "audio_clean.wav"
+            )
+
+        # ====================================
+        # DETERMINE VIDEO SEGMENTS
+        # ====================================
+
+        if remove_silence_enabled:
+
+            clips = audio_result
+
+        else:
+
+            clips = None
+
+        # ====================================
+        # UPDATE PROGRESS
+        # ====================================
+
+        if reduce_noise_enabled:
+
+            update_status(
+                "Audio processing completed.",
+                0.40
+            )
+
+        else:
+
+            update_status(
+                "Audio analysis completed.",
+                0.40
+            )
+
+        # ====================================
+        # PROCESS VIDEO
+        # ====================================
+
         update_status(
-            "Cutting video...",
+            "Creating final video...",
             0.60
         )
 
-        final_video = video_processor.cut_video(
-            video_path,
-            clips,
-            output_folder
+        final_video = (
+            video_processor.cut_video(
+
+                video_path,
+
+                clips,
+
+                output_folder,
+
+                audio_path=audio_path,
+
+                output_name=output_name
+            )
         )
 
+        # ====================================
+        # COMPLETED
+        # ====================================
+
         update_status(
-            f"Completed!\n\nOutput file:\n{final_video}",
-            1
+
+            "Completed!\n\n"
+            "Output file:\n"
+            f"{final_video}",
+
+            1.0
         )
 
     except Exception as error:
@@ -181,17 +443,37 @@ def process_video():
         update_status(
             f"Error:\n{error}"
         )
-        # ============================================
+
+    finally:
+
+        app.after(
+
+            0,
+
+            update_process_button
+        )
+
+
+# ============================================
 # USER INTERFACE
 # ============================================
 
 title = ctk.CTkLabel(
+
     app,
+
     text="AutoCut Studio",
-    font=("Arial", 32, "bold")
+
+    font=(
+        "Arial",
+        32,
+        "bold"
+    )
 )
 
-title.pack(pady=30)
+title.pack(
+    pady=30
+)
 
 
 # ============================================
@@ -199,22 +481,36 @@ title.pack(pady=30)
 # ============================================
 
 ctk.CTkLabel(
+
     app,
+
     text="Video:"
 ).pack()
 
+
 video_entry = ctk.CTkEntry(
+
     app,
+
     width=600
 )
 
-video_entry.pack(pady=10)
+video_entry.pack(
+    pady=10
+)
+
 
 ctk.CTkButton(
+
     app,
+
     text="Select Video",
+
     command=select_video
-).pack(pady=10)
+
+).pack(
+    pady=10
+)
 
 
 # ============================================
@@ -222,22 +518,38 @@ ctk.CTkButton(
 # ============================================
 
 ctk.CTkLabel(
+
     app,
+
     text="Output Folder:"
-).pack(pady=(20, 0))
+).pack(
+    pady=(20, 0)
+)
+
 
 output_entry = ctk.CTkEntry(
+
     app,
+
     width=600
 )
 
-output_entry.pack(pady=10)
+output_entry.pack(
+    pady=10
+)
+
 
 ctk.CTkButton(
+
     app,
+
     text="Select Folder",
+
     command=select_output_folder
-).pack(pady=10)
+
+).pack(
+    pady=10
+)
 
 
 # ============================================
@@ -245,51 +557,80 @@ ctk.CTkButton(
 # ============================================
 
 ctk.CTkLabel(
-    app,
-    text="Processing Options",
-    font=("Arial", 18, "bold")
-).pack(pady=20)
 
-remove_silence = ctk.CTkCheckBox(
     app,
-    text="Remove Silence"
+
+    text="Processing Options",
+
+    font=(
+        "Arial",
+        18,
+        "bold"
+    )
+
+).pack(
+    pady=20
 )
 
-remove_silence.pack(pady=5)
 
-# Enabled by default
-remove_silence.select()
+# ============================================
+# REMOVE SILENCE
+# ============================================
+
+remove_silence = ctk.CTkCheckBox(
+
+    app,
+
+    text="Remove Silence",
+
+    command=update_process_button
+)
+
+remove_silence.pack(
+    pady=5
+)
 
 
 # ============================================
-# FUTURE FEATURES
-# (Keep commented until implementation)
+# REDUCE BACKGROUND NOISE
 # ============================================
 
-# remove_breath = ctk.CTkCheckBox(
-#     app,
-#     text="Remove Breathing"
-# )
-# remove_breath.pack(pady=5)
+remove_noise = ctk.CTkCheckBox(
 
-# remove_noise = ctk.CTkCheckBox(
-#     app,
-#     text="Remove Background Noise"
-# )
-# remove_noise.pack(pady=5)
+    app,
+
+    text="Reduce Background Noise",
+
+    command=update_process_button
+)
+
+remove_noise.pack(
+    pady=5
+)
 
 
 # ============================================
 # PROCESS BUTTON
 # ============================================
 
-ctk.CTkButton(
+process_button = ctk.CTkButton(
+
     app,
+
     text="PROCESS VIDEO",
+
     width=250,
+
     height=40,
-    command=start_thread
-).pack(pady=30)
+
+    command=start_thread,
+
+    state="disabled"
+)
+
+process_button.pack(
+    pady=30
+)
 
 
 # ============================================
@@ -297,13 +638,19 @@ ctk.CTkButton(
 # ============================================
 
 progress_bar = ctk.CTkProgressBar(
+
     app,
+
     width=600
 )
 
-progress_bar.set(0)
+progress_bar.set(
+    0
+)
 
-progress_bar.pack(pady=20)
+progress_bar.pack(
+    pady=20
+)
 
 
 # ============================================
@@ -311,13 +658,26 @@ progress_bar.pack(pady=20)
 # ============================================
 
 status = ctk.CTkLabel(
+
     app,
-    text="Status: Waiting for a video...",
-    font=("Arial", 14, "bold"),
+
+    text=(
+        "Status: "
+        "Select at least one processing option."
+    ),
+
+    font=(
+        "Arial",
+        14,
+        "bold"
+    ),
+
     wraplength=700
 )
 
-status.pack(pady=15)
+status.pack(
+    pady=15
+)
 
 
 # ============================================
